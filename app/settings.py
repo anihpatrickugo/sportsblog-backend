@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     # Third party dependencies
     "graphene_django",
     "ckeditor",
+    "taggit",
 
     # Local apps
     "blog.apps.BlogConfig",

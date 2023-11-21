@@ -19,12 +19,14 @@ from django.urls import path, include
 from django.conf.urls.static import static
 from django.conf import settings
 
+from django.views.decorators.csrf import csrf_exempt
 from graphene_django.views import GraphQLView
+from blog.schema import schema
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path('ckeditor/', include('ckeditor_uploader.urls')),
-    path("graphql", GraphQLView.as_view(graphiql=True)),
+    path("graphql", csrf_exempt(GraphQLView.as_view(graphiql=True, schema=schema))),
 ]
 
 
