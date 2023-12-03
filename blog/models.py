@@ -23,7 +23,7 @@ class Post(models.Model):
     author = models.ForeignKey(Author, on_delete=models.CASCADE)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     content = RichTextField()
-    tags = TaggableManager()
+    # tags = TaggableManager()
     date = models.DateTimeField(auto_now=True)
     last_edited = models.DateTimeField(auto_now_add=True)
 
@@ -31,11 +31,13 @@ class Post(models.Model):
         return self.title
 
 
+
 class Comment(models.Model):
     post = models.ForeignKey(Post, on_delete=models.SET_NULL, null=True)
     message = models.CharField(max_length=100000)
+    blogger = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     date = models.DateTimeField(auto_now=True)
-    sub_comments = models.ManyToManyField("self", blank=True, null=True)
+
 
     def __str__(self):
         return self.message[0:30]

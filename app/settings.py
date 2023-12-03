@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 import os
 
+
 import blog.apps
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -43,8 +44,11 @@ INSTALLED_APPS = [
 
     # Third party dependencies
     "graphene_django",
+    "graphql_auth",
+    "graphql_jwt.refresh_token.apps.RefreshTokenConfig",
+    "social_django",
     "ckeditor",
-    "taggit",
+
 
     # Local apps
     "blog.apps.BlogConfig",
@@ -116,6 +120,23 @@ USE_I18N = True
 
 USE_TZ = True
 
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+
+    # graphql-auth
+    "graphql_auth.backends.GraphQLAuthBackend",
+
+    #google auth
+     "social_core.backends.google.GoogleOAuth2",
+
+]
+
+# social auth
+SOCIAL_AUTH_JSONFIELD_ENABLED = True
+
+# email backend
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
@@ -134,6 +155,29 @@ CKEDITOR_UPLOAD_PATH = "uploads/"
 # Grapql setthings
 GRAPHENE = {
     "SCHEMA": "django_root.schema.schema"
+}
+
+GRAPHQL_JWT = {
+    #...
+    "JWT_ALLOW_ANY_CLASSES": [
+        "graphql_auth.mutations.Register",
+        "graphql_auth.mutations.VerifyAccount",
+        "graphql_auth.mutations.ResendActivationEmail",
+        "graphql_auth.mutations.SendPasswordResetEmail",
+        "graphql_auth.mutations.PasswordReset",
+        "graphql_auth.mutations.ObtainJSONWebToken",
+        "graphql_auth.mutations.VerifyToken",
+        "graphql_auth.mutations.RefreshToken",
+        "graphql_auth.mutations.RevokeToken",
+        "graphql_auth.mutations.VerifySecondaryEmail",
+    ],
+    'JWT_VERIFY_EXPIRATION': True,
+    'JWT_LONG_RUNNING_REFRESH_TOKEN': True,
+}
+
+GRAPHQL_JWT = {
+    # ...
+
 }
 
 # Default primary key field type
