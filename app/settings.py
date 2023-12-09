@@ -43,6 +43,8 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
 
     # Third party dependencies
+    "taggit",
+    # "tag_fields",
     "graphene_django",
     "graphql_auth",
     "graphql_jwt.refresh_token.apps.RefreshTokenConfig",
@@ -124,6 +126,7 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 
     # graphql-auth
+    "graphql_jwt.backends.JSONWebTokenBackend",
     "graphql_auth.backends.GraphQLAuthBackend",
 
     #google auth
@@ -150,11 +153,15 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # CKEditor path
 CKEDITOR_BASEPATH = "/staticfiles/ckeditor/ckeditor/"
 CKEDITOR_UPLOAD_PATH = "uploads/"
+CKEDITOR_IMAGE_BACKEND = "pillow"
 
 
 # Grapql setthings
 GRAPHENE = {
-    "SCHEMA": "django_root.schema.schema"
+    "SCHEMA": "django_root.schema.schema",
+    "MIDDLEWARE": [
+      "graphql_jwt.middleware.JSONWebTokenMiddleware",
+    ],
 }
 
 GRAPHQL_JWT = {
@@ -173,6 +180,7 @@ GRAPHQL_JWT = {
     ],
     'JWT_VERIFY_EXPIRATION': True,
     'JWT_LONG_RUNNING_REFRESH_TOKEN': True,
+    'JWT_AUTH_HEADER_PREFIX': "Bearer"
 }
 
 GRAPHQL_JWT = {
@@ -180,7 +188,19 @@ GRAPHQL_JWT = {
 
 }
 
+GRAPHQL_AUTH = {
+    'LOGIN_ALLOWED_FIELDS': ['email'],
+    # 'REGISTER_MUTATION_FIELDS': ["email", "first_name", "last_name"],
+    # 'UPDATE_MUTATION_FIELDS': ["email", "first_name", "last_name"],
+    'ALLOW_LOGIN_NOT_VERIFIED': True,
+    'SEND_ACTIVATION_EMAIL': False,
+}
+
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+SOCIAL_AUTH_REQUIRE_POST = True

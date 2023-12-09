@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth import get_user_model
-from ckeditor.fields import RichTextField
+from ckeditor_uploader.fields import RichTextUploadingField
 from taggit.managers import TaggableManager
 
 # Create your models here.
@@ -22,13 +22,19 @@ class Post(models.Model):
     title = models.CharField(max_length=200)
     author = models.ForeignKey(Author, on_delete=models.CASCADE)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
-    content = RichTextField()
-    # tags = TaggableManager()
+    content = RichTextUploadingField()
+    tags = TaggableManager()
+
+    # tags = ModelTagsManager()
     date = models.DateTimeField(auto_now=True)
     last_edited = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.title
+
+    @property
+    def get_tags(self):
+        return self.tags.all()
 
 
 

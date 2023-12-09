@@ -1,17 +1,31 @@
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404
 
 import graphene
+
 
 from graphql import GraphQLError
 
 from graphene_django import DjangoObjectType
+from graphene_django import DjangoListField
 from graphql_auth.schema import UserQuery, MeQuery
 from graphql_auth import mutations
 
 import graphql_social_auth
 
-# from taggit.models import Tag
+from taggit.managers import TaggableManager
+# from tag_fields.models import ModelTag
+
 from blog.models import Category, Post, Comment
+from blog.converters import convert_taggable_manager
+User = get_user_model()
+
+
+class BloggerType(DjangoObjectType):
+    class Meta:
+        model = User
+        fields = "__all__"
+
 
 class CategoryType(DjangoObjectType):
     class Meta:
@@ -20,27 +34,33 @@ class CategoryType(DjangoObjectType):
 
 
 class CommentType(DjangoObjectType):
+    blogger = graphene.Field(BloggerType)
+
     class Meta:
         model = Comment
         fields = "__all__"
+
+    def resolve_blogger(self, info):
+        comment = Comment.objects.get(id=self.id)
+        blogger = comment.blogger
+        return  blogger
 
 
 
 
 class PostType(DjangoObjectType):
     comments = graphene.List(CommentType)
+    tags = TaggableManager()
+    # tags = graphene.List(convert_taggable_manager(field=None))
 
     class Meta:
         model = Post
         # fields = "__all__"
+        # exclude = ['tags']
 
     def resolve_comments(self, info):
-        comments = Comment.objects.filter(post=self.id)
+        comments = Comment.objects.filter(post=self.id).reverse()
         return  comments
-
-
-
-
 
 class Query(UserQuery, MeQuery, graphene.ObjectType):
     popular_posts = graphene.List(PostType)
@@ -52,12 +72,12 @@ class Query(UserQuery, MeQuery, graphene.ObjectType):
 
     def resolve_popular_posts(root, info):
         # We can easily optimize query count in the resolve method
-        return Post.objects.all()
+        return Post.objects.all().order_by('-id')[0:6]
 
 
     def resolve_top_stories(root, info):
         # We can easily optimize query count in the resolve method
-        return Post.objects.extra(select={'length':'Length(title)'}).order_by('length')
+        return Post.objects.extra(select={'length':'Length(title)'}).order_by('length')[0:8]
 
     def resolve_post_by_id(root, info, id):
         try:
@@ -75,9 +95,11 @@ class Query(UserQuery, MeQuery, graphene.ObjectType):
             return None
 
 
-class CommentMutation(LoginRequiredMixin, graphene.Mutation):
+class CommentMutation(graphene.Mutation):
+
     class Arguments:
         # The input arguments for this mutation
+        username = graphene.String(required=True)
         post_id = graphene.Int(required=True)
         message = graphene.String(required=True)
 
@@ -86,18 +108,25 @@ class CommentMutation(LoginRequiredMixin, graphene.Mutation):
     comment = graphene.Field(CommentType)
 
     @classmethod
-    def mutate(cls, root, info, post_id, message):
+    def mutate(cls, root, info, username, post_id, message):
+        post = Post.objects.get(id=post_id)
 
-        if info.context.user.is_authenticated:
-            post = Post.objects.get(id=post_id)
-            blogger = info.context.user
+        try:
+            blogger = get_object_or_404(User, username=username)
 
-            comment = Comment.objects.create(post=post, message=message, blogger=blogger)
-            comment.save()
-            # Notice we return an instance of this mutation
-            return CommentMutation(comment=comment)
+        except :
+            raise  GraphQLError("User does not exist")
 
-        raise GraphQLError('You must be logged in to Comment!')
+        comment = Comment.objects.create(post=post, message=message, blogger=blogger)
+        comment.save()
+        # Notice we return an instance of this mutation
+        return CommentMutation(comment=comment)
+
+
+
+
+
+
 
 
 
@@ -128,6 +157,6 @@ class AuthMutation(graphene.ObjectType):
 
 class Mutation(AuthMutation, graphene.ObjectType):
     make_comment = CommentMutation.Field()
-    social_auth = graphql_social_auth.SocialAuth.Field()
+    social_auth = graphql_social_auth.SocialAuthJWT.Field()
 
 schema = graphene.Schema(query=Query, mutation=Mutation)
