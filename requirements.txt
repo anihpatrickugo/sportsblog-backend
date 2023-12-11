@@ -19,8 +19,10 @@ graphene==2.1.9
 graphene-django==2.16.0
 graphql-core==2.3.2
 graphql-relay==2.0.1
+gunicorn==21.2.0
 idna==3.6
 oauthlib==3.2.2
+packaging==23.2
 Pillow==10.1.0
 promise==2.3
 psycopg2-binary==2.9.9
