@@ -2,6 +2,10 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from ckeditor_uploader.fields import RichTextUploadingField
 from taggit.managers import TaggableManager
+import cloudinary
+from cloudinary.models import CloudinaryField
+
+
 
 # Create your models here.
 
@@ -18,7 +22,7 @@ class Category (models.Model):
 
 class Post(models.Model):
 
-    banner = models.ImageField(upload_to="images/banner")
+    banner = CloudinaryField('banner')
     title = models.CharField(max_length=200)
     author = models.ForeignKey(Author, on_delete=models.CASCADE)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)

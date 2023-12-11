@@ -7,7 +7,6 @@ import graphene
 from graphql import GraphQLError
 
 from graphene_django import DjangoObjectType
-from graphene_django import DjangoListField
 from graphql_auth.schema import UserQuery, MeQuery
 from graphql_auth import mutations
 
@@ -17,8 +16,10 @@ from taggit.managers import TaggableManager
 # from tag_fields.models import ModelTag
 
 from blog.models import Category, Post, Comment
+from  blog.converters import BannerType
 from blog.converters import convert_taggable_manager
 User = get_user_model()
+
 
 
 class BloggerType(DjangoObjectType):
@@ -46,16 +47,14 @@ class CommentType(DjangoObjectType):
         return  blogger
 
 
-
-
 class PostType(DjangoObjectType):
+    banner = graphene.Field(BannerType)
     comments = graphene.List(CommentType)
     tags = TaggableManager()
-    # tags = graphene.List(convert_taggable_manager(field=None))
 
     class Meta:
         model = Post
-        # fields = "__all__"
+        fields = "__all__"
         # exclude = ['tags']
 
     def resolve_comments(self, info):
